@@ -1,43 +1,56 @@
-import { useCategories } from '../features/category/useCategory'
-// import { useQuery } from '@tanstack/react-query'
+import { useFormik } from 'formik'
+import { useFetchCategories } from '../features/category/useFetchCategory'
+import { useMutation } from '@tanstack/react-query'
 import { axiosInstance } from '../lib/axios'
-import { useEffect, useState } from 'react'
+import React from 'react'
 
 const Category = () => {
-    // const { data: categories, isLoading: isLoadingCategory } = useCategories()
+    const { data: categories, isLoading: isLoadingCategory, refetch: refetchCategory, } = useFetchCategories()
 
-    const [categories, setCategories] = useState([])
-    const [isLoadingCategory, setIsLoadingCategory] = useState(false)
+    const formik = useFormik({
+        initialValues: {
+            name: '',
+            price: 0,
+        },
+        onSubmit: () => {
+            // post category
+            const { name } = formik.values
+            console.log('submit form')
+            mutate({
+                name
+            })
 
-    const fetchCategories = async() => {
-        try {
-            setIsLoadingCategory(true)
-            setTimeout(async() => { // biar kek ada ngelegnnya
-                const categoriesResponse = await axiosInstance.get('/categories')
-        
-                setCategories(categoriesResponse.data.payload.datas)
-                setIsLoadingCategory(false)
-            }, 1500)
-        } catch (err) {
-            console.log(err)
+            alert('category was added')
+
+            formik.setFieldValue('name', '')
+            formik.setFieldValue('price', 0)
         }
+    })
+
+    const { mutate } = useMutation({
+        mutationFn: async(body) => {
+            // const { name } = formik.values
+            // const categoryResponse = await axiosInstance.post('/categories', {
+            //     name: name, // karena mau ambil name, kalo price tinggal .price
+            //     // price: parseInt(price) hanya contoh
+            // }) old version
+
+            const categoryResponse = await axiosInstance.post('/categories', body)
+
+            return categoryResponse
+        },
+        // kalo success bakal ngapain aja
+        onSuccess: () => {
+            refetchCategory()
+        },
+    })
+
+    const handleFormInput = (event) => {
+        formik.setFieldValue(event.target.name, event.target.value)
     }
 
-    useEffect(() => {
-        fetchCategories()
-    }, [])
-
-    // const categoriesQuery = useQuery({
-    //     queryFn: async() => {
-    //         const categoriesResponse = await axiosInstance.get('/categories')
-    //         return categoriesResponse
-    //     },
-    // })
-
-    console.log(categoriesQuery.data)
-
     const renderCategories = () => {
-        return categories.map((category) => {
+        return categories?.data.payload.datas.map((category) => {
             return (
                 <tr key={category.id}>
                     <td>{category.id}</td>
@@ -50,6 +63,7 @@ const Category = () => {
     return (
         <>
             <div>Category</div>
+
             <table>
                 <thead>
                     <tr>
@@ -64,6 +78,25 @@ const Category = () => {
                     {isLoadingCategory && 'loading category data..'} 
                 </tbody>
             </table>
+
+            <p>{formik.values.name}</p>
+            <form onSubmit={formik.handleSubmit}>
+                <label htmlFor="">category name</label>
+                <input 
+                    type="text" 
+                    name='name' 
+                    value={formik.values.name} 
+                    onChange={handleFormInput} 
+                /> {/* namenya ngikut kayak di formiknya */}
+                <label htmlFor="">input angka terserah</label>
+                <input 
+                    type="number" 
+                    name='price' 
+                    value={formik.values.price} 
+                    onChange={handleFormInput} 
+                />
+                <button type='submit'>submit</button>
+            </form>
         </>
     )
 }
