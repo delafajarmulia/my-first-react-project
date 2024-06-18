@@ -3,9 +3,10 @@ import { useFetchCategories } from '../features/category/useFetchCategory'
 import { useMutation } from '@tanstack/react-query'
 import { axiosInstance } from '../lib/axios'
 import React from 'react'
+import { useCreateCategory } from '../features/category/useCreateCategory'
 
 const Category = () => {
-    const { data: categories, isLoading: isLoadingCategory, refetch: refetchCategory, } = useFetchCategories()
+    const { data: categories, isLoading: isLoadingCategory, refetch: refetchCategories } = useFetchCategories()
 
     const formik = useFormik({
         initialValues: {
@@ -15,34 +16,27 @@ const Category = () => {
         onSubmit: () => {
             // post category
             const { name } = formik.values
-            console.log('submit form')
+            
             mutate({
                 name
             })
 
-            alert('category was added')
+            // alert('category was added')
 
-            formik.setFieldValue('name', '')
-            formik.setFieldValue('price', 0)
+            formik.setFieldValue("name", "")
+            formik.setFieldValue("price", 0)
         }
     })
 
-    const { mutate } = useMutation({
-        mutationFn: async(body) => {
-            // const { name } = formik.values
-            // const categoryResponse = await axiosInstance.post('/categories', {
-            //     name: name, // karena mau ambil name, kalo price tinggal .price
-            //     // price: parseInt(price) hanya contoh
-            // }) old version
-
-            const categoryResponse = await axiosInstance.post('/categories', body)
-
-            return categoryResponse
-        },
+    const { mutate, isLoading: createCategoryIsLLoading } = useCreateCategory({
         // kalo success bakal ngapain aja
         onSuccess: () => {
-            refetchCategory()
+            refetchCategories() // ini belum work :(
         },
+        onError: () => {
+            // console.log(categoryResponse.data)
+            console.log('error')
+        }
     })
 
     const handleFormInput = (event) => {
@@ -85,7 +79,7 @@ const Category = () => {
                 <input 
                     type="text" 
                     name='name' 
-                    value={formik.values.name} 
+                    value={formik.values.name} /* biar nanti bisa ke reset valuenya */
                     onChange={handleFormInput} 
                 /> {/* namenya ngikut kayak di formiknya */}
                 <label htmlFor="">input angka terserah</label>
@@ -95,7 +89,13 @@ const Category = () => {
                     value={formik.values.price} 
                     onChange={handleFormInput} 
                 />
-                <button type='submit'>submit</button>
+                {
+                    createCategoryIsLLoading ? 
+                        <button type='submit' disabled>submit</button> 
+                        : 
+                        <button type='submit'>submit</button>
+                }
+                
             </form>
         </>
     )

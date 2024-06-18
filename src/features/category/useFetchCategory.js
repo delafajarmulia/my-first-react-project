@@ -39,4 +39,14 @@ export const useFetchCategories = () => {
     })
 
     return{data, isLoading: isLoadingCategory}
+
+    // return useQuery({
+    //     queryFn: async () => {
+    //       const categoriesResponse = await axiosInstance.get("/categories");
+    
+    //       return categoriesResponse;
+    //     },
+    //     queryKey: ["fetch.categories"],
+    //     onError,
+    // });
 }
