@@ -1,0 +1,3 @@
+formik -> handle forms
+yup -> validate
+react-query / tanstack -> manage api call (caching, state, dll)
